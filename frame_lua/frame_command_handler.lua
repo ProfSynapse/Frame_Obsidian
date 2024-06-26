@@ -1,7 +1,6 @@
-// lib/utils/frame_data_handler.dart
+// frame_data_handler.dart
 
 import 'dart:convert';
-import 'dart:typed_data';
 import '../services/obsidian_sync.dart';
 
 class FrameDataHandler {
@@ -26,11 +25,10 @@ class FrameDataHandler {
   void _handleDataChunk(List<int> chunk) {
     if (chunk.length < 4) return; // Ignore if chunk is too small
 
-    Uint8List identifier = Uint8List.fromList(chunk.sublist(0, 4));
-    String id = identifier.toString();
-
-    _dataBuffer[id] ??= []; // Initialize the list if it doesn't exist
-    _dataBuffer[id]!.addAll(chunk.sublist(4)); // Now we can use ! as we're sure it's not null
+    String id = String.fromCharCodes(chunk.sublist(0, 4));
+    
+    _dataBuffer[id] ??= [];
+    _dataBuffer[id]!.addAll(chunk.sublist(4));
 
     // Check if we have a complete message
     if (_isMessageComplete(id)) {
@@ -44,11 +42,8 @@ class FrameDataHandler {
   bool _isMessageComplete(String id) {
     if (!_dataBuffer.containsKey(id) || _dataBuffer[id] == null) return false;
 
-    List<int> buffer = _dataBuffer[id]!;
-    if (buffer.isEmpty) return false;
-
-    String message = String.fromCharCodes(buffer);
     try {
+      String message = String.fromCharCodes(_dataBuffer[id]!);
       json.decode(message);
       return true;
     } catch (e) {
